@@ -4,75 +4,86 @@ import { useState } from 'react';
 const getCountries = (data) => Object.keys(data);
 const getCapitals = (data) => Object.values(data);
 const shuffle = (list) => list.sort(() => Math.random() - 0.5);
-const addColor = (name) => ({ name, color: 'initial' });
+const initializeItem = (name) => ({ name, selected: false, color: 'initial' });
 
-function Card(name, color, onClick) {
+function Button(name, color, onClick) {
     return <button onClick={onClick} style={{backgroundColor: `${color}`}}>{name}</button>
 }
 
 function CountryCapitalGame({ data }) {
-    const initialItems = shuffle(getCountries(data).concat(getCapitals(data))).map(addColor);
+    const initialItems = shuffle(getCountries(data).concat(getCapitals(data))).map(initializeItem);
     const [items, setItems] = useState(initialItems);
-    const [firstSelected, setFirstSelected] = useState(null);
-    const [secondSelected, setSecondSelected] = useState(null);
 
-    const updateItems = (callback) => {
-        setItems(prevItems => callback(prevItems));
-    };
-
-    const updateColorFirstSelection = (name) => {
-        updateItems(items => items.map(item => item.name === name ? { ...item, color: '#0000ff' } : item));
+    const resetColor = (items) => {
+        return items.map(item => ({ ...item, color: 'initial' }));
     }
 
-    const updateColorErrorSelection = (name1, name2) => {
-        updateItems(items => items.map(item => item.name === name1 || item.name === name2 ? ({ ...item, color: '#ff0000' }) : item));
+    const resetNonMatchedItems = (items) => {
+        if (items.filter(item => item.selected === true).length === 2) {
+            return resetColor(items);
+        }
+
+        return items;
     }
 
-    const updateColorDefault = (name) => {
-        updateItems(items => items.map(item => item.name === name ? ({ ...item, color: 'initial' }) : item));
+    const markAsFirstOption = (items) => items.map(item => {
+        if (item.selected === true) {
+            return ({ ...item, color: '#0000ff' });
+        }
+
+        return item;
+    });
+
+    const verifyMatch = (items) => {
+        const [firstItemSelected, secondItemSelected] = items.filter(item => item.selected === true);
+
+        return data[firstItemSelected.name] === secondItemSelected.name || data[secondItemSelected.name] === firstItemSelected.name;
     }
 
-    const selectionMatches = (name1, name2) => {
-        return data[name1] === name2 || data[name2] === name1;
-    }
+    const deleteMatchedItems = (items, name) => items.filter(item => item.selected === false && item.name !== name);
 
-    const removeMatched = () => {
-        updateItems(items => items.filter(item => item !== firstSelected && item !== secondSelected));
-        setFirstSelected(null);
-        setSecondSelected(null);
-    }
+    const selectItem = (items, name) => items.map(item => item.name === name ? ({
+        ...item,
+        selected: true,
+    }) : item);
+
+    const twoItemsSelected = items => items.filter(item => item.selected === true).length === 2;
+
+    const markAsError = items => items.map(item => {
+        if (item.selected === true) {
+            return { ...item, color: '#ff0000' };
+        }
+
+        return item;
+    });
 
     const getOnItemClick = (name) => () => {
-        if (firstSelected === null) {
-            setFirstSelected(name);
-            updateColorFirstSelection(name);
-        } else if (secondSelected === null) {
-            setSecondSelected(name);
-
-            if (selectionMatches(firstSelected, name)) {
-                removeMatched();
+        const resetItems = resetNonMatchedItems(items);
+        const itemsWithNewSelection = selectItem(resetItems, name);
+        console.log('getOnItemClick itemsWithNewSelection', itemsWithNewSelection);
+        if(twoItemsSelected(itemsWithNewSelection)) {
+            if (verifyMatch(itemsWithNewSelection)) {
+                const itemsWithoutMatches = deleteMatchedItems(itemsWithNewSelection, name);
+                setItems(itemsWithoutMatches);
             } else {
-                updateColorErrorSelection(firstSelected, name);
+                const itemsWithError = markAsError(itemsWithNewSelection);
+                setItems(itemsWithError);
             }
         } else {
-            updateColorDefault(firstSelected);
-            updateColorDefault(secondSelected);
-            setSecondSelected(null);
-
-            setFirstSelected(name);
-            updateColorFirstSelection(name);
+            const itemsWithOneSelected = markAsFirstOption(itemsWithNewSelection);
+            setItems(itemsWithOneSelected);
         }
     }
 
-    return <div>
-        <ul>
+    return (
+        <div>
             {items.map((item, index) => (
-                <li key={index}>
-                    {Card(item.name, item.color, getOnItemClick(item.name))}
-                </li>
+                <span key={index}>
+                    {Button(item.name, item.color, getOnItemClick(item.name))}
+                </span>
             ))}
-        </ul>
-    </div>;
+        </div>
+    );
 }
 
 const CountryAndCapital = () => {
