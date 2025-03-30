@@ -38,7 +38,7 @@ function CountryCapitalGame({ data }) {
 
     const deleteSelectedItems = (items) => items.filter(item => item.selected === false);
 
-    const selectItem = (items, name) => items.map(item => item.name === name ? ({
+    const addSelection = (items, name) => items.map(item => item.name === name ? ({
         ...item,
         selected: true,
     }) : item);
@@ -55,7 +55,7 @@ function CountryCapitalGame({ data }) {
 
     const getOnItemClick = (name) => () => {
         const resetItems = resetNonMatchedItems(items);
-        const itemsWithNewSelection = selectItem(resetItems, name);
+        const itemsWithNewSelection = addSelection(resetItems, name);
 
         if(twoItemsSelected(itemsWithNewSelection)) {
             if (verifyMatch(itemsWithNewSelection)) {
