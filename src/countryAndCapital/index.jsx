@@ -14,13 +14,9 @@ function CountryCapitalGame({ data }) {
     const initialItems = shuffle(getCountries(data).concat(getCapitals(data))).map(initializeItem);
     const [items, setItems] = useState(initialItems);
 
-    const resetColor = (items) => {
-        return items.map(item => ({ ...item, color: 'initial' }));
-    }
-
     const resetNonMatchedItems = (items) => {
         if (items.filter(item => item.selected === true).length === 2) {
-            return resetColor(items);
+            return items.map(item => item.selected ? ({ ...item, selected: false, color: 'initial' }) : item);
         }
 
         return items;
@@ -40,7 +36,7 @@ function CountryCapitalGame({ data }) {
         return data[firstItemSelected.name] === secondItemSelected.name || data[secondItemSelected.name] === firstItemSelected.name;
     }
 
-    const deleteMatchedItems = (items, name) => items.filter(item => item.selected === false && item.name !== name);
+    const deleteSelectedItems = (items) => items.filter(item => item.selected === false);
 
     const selectItem = (items, name) => items.map(item => item.name === name ? ({
         ...item,
@@ -60,18 +56,15 @@ function CountryCapitalGame({ data }) {
     const getOnItemClick = (name) => () => {
         const resetItems = resetNonMatchedItems(items);
         const itemsWithNewSelection = selectItem(resetItems, name);
-        console.log('getOnItemClick itemsWithNewSelection', itemsWithNewSelection);
+
         if(twoItemsSelected(itemsWithNewSelection)) {
             if (verifyMatch(itemsWithNewSelection)) {
-                const itemsWithoutMatches = deleteMatchedItems(itemsWithNewSelection, name);
-                setItems(itemsWithoutMatches);
+                setItems(deleteSelectedItems(itemsWithNewSelection));
             } else {
-                const itemsWithError = markAsError(itemsWithNewSelection);
-                setItems(itemsWithError);
+                setItems(markAsError(itemsWithNewSelection));
             }
         } else {
-            const itemsWithOneSelected = markAsFirstOption(itemsWithNewSelection);
-            setItems(itemsWithOneSelected);
+            setItems(markAsFirstOption(itemsWithNewSelection));
         }
     }
 
