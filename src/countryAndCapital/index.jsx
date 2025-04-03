@@ -6,11 +6,12 @@ const getCapitals = (data) => Object.values(data);
 const shuffle = (list) => list.sort(() => Math.random() - 0.5);
 const initializeItem = (name) => ({ name, selected: false, color: 'initial' });
 
-function Button(name, color, onClick) {
-    return <button onClick={onClick} style={{backgroundColor: `${color}`}}>{name}</button>
-}
+const Button = (name, color, onClick) => (
+    <button onClick={ onClick } style={ { backgroundColor: `${ color }` } }>{ name }</button>
+);
 
-function CountryCapitalGame({ data }) {
+
+const CountryCapitalGame = ({ data }) => {
     const initialItems = shuffle(getCountries(data).concat(getCapitals(data))).map(initializeItem);
     const [items, setItems] = useState(initialItems);
 
@@ -57,7 +58,7 @@ function CountryCapitalGame({ data }) {
         const resetItems = resetNonMatchedItems(items);
         const itemsWithNewSelection = addSelection(resetItems, name);
 
-        if(twoItemsSelected(itemsWithNewSelection)) {
+        if (twoItemsSelected(itemsWithNewSelection)) {
             if (verifyMatch(itemsWithNewSelection)) {
                 setItems(deleteSelectedItems(itemsWithNewSelection));
             } else {
@@ -70,20 +71,25 @@ function CountryCapitalGame({ data }) {
 
     return (
         <div>
-            {items.map((item, index) => (
-                <span key={index}>
-                    {Button(item.name, item.color, getOnItemClick(item.name))}
+            { items.map((item, index) => (
+                <span key={ index }>
+                    { Button(item.name, item.color, getOnItemClick(item.name)) }
                 </span>
-            ))}
+            )) }
         </div>
     );
-}
+};
 
 const CountryAndCapital = () => {
     return (
         <>
             <h1>Country and Capital Game</h1>
-            <CountryCapitalGame data={{ Germany: "Berlin", Azerbaijan: "Baku", Poland: "Warsaw", "Papua New Guinea": "Port Moresby"}} />
+            <CountryCapitalGame data={ {
+                Germany: "Berlin",
+                Azerbaijan: "Baku",
+                Poland: "Warsaw",
+                "Papua New Guinea": "Port Moresby"
+            } }/>
         </>
     );
 }
